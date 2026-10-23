@@ -119,8 +119,9 @@ nav.steps .count{font-size:.75rem;font-weight:800;color:var(--muted);font-varian
 .scene svg{position:absolute;inset:0;width:100%;height:100%}
 .spot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:4px}
 .spot .ring{width:26px;height:26px;border-radius:50%;border:3px solid var(--c);background:var(--surface);display:grid;place-items:center;box-shadow:0 2px 6px rgba(15,30,50,.18);transition:transform .15s}
-.spot .ring i{width:12px;height:12px;border-radius:50%;background:var(--c);opacity:.35;transition:opacity .2s}
-.spot.done .ring i{opacity:1}
+.spot .ring i{width:10px;height:10px;border-radius:50%;background:var(--c);transition:opacity .2s}
+.spot.done .ring{background:var(--c);border-color:#ffffff;box-shadow:0 0 0 1.5px var(--c),0 2px 6px rgba(15,30,50,.3)}
+.spot.done .ring i{width:6px;height:11px;border-radius:0;background:none;border:solid #ffffff;border-width:0 3px 3px 0;transform:translate(0,-1px) rotate(45deg)}
 .spot .lbl{display:none;position:absolute;top:100%;margin-top:2px;z-index:3;font-family:var(--f-display);font-weight:800;font-size:.72rem;background:var(--surface);color:var(--ink);padding:2px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
 .spot:hover .lbl,.spot:focus-visible .lbl,.spot[aria-pressed="true"] .lbl{display:block}
 .spot:hover,.spot[aria-pressed="true"]{z-index:4}
@@ -202,6 +203,21 @@ textarea{font:inherit;font-size:.92rem;border:1.5px solid var(--line);border-rad
 .tool .code{flex:none;font-family:var(--f-display);font-weight:900;font-size:.78rem;letter-spacing:.04em;background:var(--night);color:var(--surface);border-radius:6px;padding:3px 7px;font-variant-numeric:tabular-nums}
 .tool b{display:block;font-size:.92rem;line-height:1.3}
 .tool small{display:block;color:var(--muted);font-size:.8rem;margin-top:2px}
+.extras{display:flex;flex-direction:column;gap:10px;border:1.5px dashed var(--line);border-radius:14px;padding:14px 16px}
+.extras-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.extras-head h3{font-size:1rem}
+.extras-head .count{font-size:.8rem;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+.chip.extra{border-style:dashed}
+.chip.done{background:color-mix(in srgb,var(--c) 16%,var(--surface));border-color:var(--c)}
+.x-tag{display:inline-block;font-size:.72rem;font-weight:700;color:var(--violet);margin-left:6px}
+.x-form{display:flex;flex-direction:column;gap:10px}
+.x-form input{font:inherit;font-size:.95rem;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface-2);color:var(--ink);width:100%}
+.x-count{font-size:.78rem;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums;margin-top:-6px}
+.x-senses{display:flex;flex-wrap:wrap;gap:6px}
+.x-err{font-size:.86rem;color:var(--coral);font-weight:700}
+.x-tools{gap:8px}
+.btn.sm{padding:7px 12px;font-size:.88rem}
+.muted-s{font-size:.88rem;color:var(--ink-2)}
 footer{font-size:.8rem;color:var(--muted);max-width:70ch}
 
 @media (max-width:820px){
@@ -213,6 +229,7 @@ footer{font-size:.8rem;color:var(--muted);max-width:70ch}
 @media (max-width:620px){
   .spot .ring{width:19px!important;height:19px!important;border-width:2.5px}
   .spot .ring i{width:8px;height:8px}
+  .spot.done .ring i{width:4px;height:8px;border-width:0 2.5px 2.5px 0}
   .spot .lbl{display:none}
   .spot[aria-pressed="true"] .lbl{display:block}
 }
@@ -488,15 +505,24 @@ const REACTS = [
 ];
 
 const STORE_KEY = "env-sensoriel-v1";
-let state = {view:"intro", place:0, sel:null, ans:{}, notes:{recup:"",alerte:"",partage:""}};
-try{ const s = JSON.parse(localStorage.getItem(STORE_KEY)||"null"); if(s && s.ans) state = Object.assign(state, {ans:s.ans, notes:s.notes||state.notes}); }catch(e){}
-function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify({ans:state.ans, notes:state.notes})); }catch(e){} }
+let state = {view:"intro", place:0, sel:null, ans:{}, notes:{recup:"",alerte:"",partage:""}, extra:{}, draft:null, confirmDel:null};
+try{ const s = JSON.parse(localStorage.getItem(STORE_KEY)||"null"); if(s && s.ans) state = Object.assign(state, {ans:s.ans, notes:s.notes||state.notes, extra:s.extra||{}}); }catch(e){}
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify({ans:state.ans, notes:state.notes, extra:state.extra})); }catch(e){} }
 
 const $main = document.getElementById("main");
 const $steps = document.getElementById("steps");
 const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 
 function doneCount(p){ return p.sources.filter(s => state.ans[s.id] && state.ans[s.id].r !== undefined).length; }
+
+/* ---------- Sensations ajoutées par la personne (3 par lieu, 100 caractères) ---------- */
+const MAX_EXTRA = 3, MAX_LEN = 100;
+const UNKNOWN = {label:"Sens à préciser", c:"var(--slate)"};
+const senseOf = k => SENSES[k] || UNKNOWN;
+function extrasOf(p){ return (state.extra[p.id]||[]).map(x=>({id:x.id, name:x.name, sense:x.sense, d:"Sensation que tu as ajoutée pour ce lieu.", adj:[], extra:true})); }
+function sourcesOf(p){ return p.sources.concat(extrasOf(p)); }
+function allSources(){ return PLACES.flatMap(p=>sourcesOf(p).map(s=>Object.assign({place:p.name},s))); }
+function senseEntries(all){ return Object.entries(SENSES).concat(all.some(s=>s.sense==="autre")?[["autre",UNKNOWN]]:[]); }
 
 function renderSteps(){
   const items = [{k:"intro", t:"Accueil"}].concat(PLACES.map((p,i)=>({k:"p"+i, t:p.name.replace(/^(L'|Le |La |Les )/,"").replace(/^./,m=>m.toUpperCase()), c:doneCount(p)+"/"+p.sources.length}))).concat([{k:"fiche", t:"Ma fiche"}]);
@@ -518,7 +544,7 @@ function sceneSVG(kind){ return SCENE_SVG[kind] || ""; }
 /* ---------- Charge ---------- */
 function load(p){
   let raw=0, adj=0, res=0, max=0;
-  p.sources.forEach(s=>{
+  sourcesOf(p).forEach(s=>{
     max += 2;
     const a = state.ans[s.id]; if(!a || a.r===undefined) return;
     if(a.r>0){ raw += a.r; adj += ((a.adj && a.adj.length) || (a.custom && a.custom.length)) ? a.r*0.5 : a.r; }
@@ -572,7 +598,7 @@ function viewPlace(){
     const c = r ? r.rc : SENSES[s.sense].c;
     return `<button class="spot ${r?"done":""}" style="${spotPos(p,s)};--c:${c}" data-sel="${s.id}" aria-pressed="${state.sel===s.id}" aria-label="${esc(s.name)}"><span class="ring"><i></i></span><span class="lbl">${esc(s.name)}</span></button>`;
   }).join("");
-  const sel = p.sources.find(s=>s.id===state.sel);
+  const sel = sourcesOf(p).find(s=>s.id===state.sel);
   const next = state.place < PLACES.length-1 ? `<button class="btn" data-go="p${state.place+1}">Lieu suivant : ${PLACES[state.place+1].name}</button>` : `<button class="btn" data-go="fiche">Voir ma fiche</button>`;
   return `<section class="place">
     <div class="scene-col">
@@ -586,16 +612,45 @@ function viewPlace(){
         </div>
         <p style="font-size:.85rem;color:var(--muted)">${L.res?`${L.res} source${L.res>1?"s":""} ressource repérée${L.res>1?"s":""} ici. `:""}Estimation indicative, pour visualiser l'effet des ajustements.</p>
       </div>
-      <div class="chips" aria-label="Liste des sources">${p.sources.map(s=>{const a=state.ans[s.id];return `<button class="chip" style="--c:${SENSES[s.sense].c}" data-sel="${s.id}" aria-pressed="${state.sel===s.id}"><span class="dot" style="background:${SENSES[s.sense].c}"></span>${esc(s.name)}${a&&a.r!==undefined?" ✓":""}</button>`}).join("")}</div>
+      <div class="chips" aria-label="Liste des sources">${p.sources.map(s=>{const a=state.ans[s.id];return `<button class="chip${a&&a.r!==undefined?" done":""}" style="--c:${SENSES[s.sense].c}" data-sel="${s.id}" aria-pressed="${state.sel===s.id}"><span class="dot" style="background:${SENSES[s.sense].c}"></span>${esc(s.name)}${a&&a.r!==undefined?" ✓":""}</button>`}).join("")}${extrasOf(p).map(s=>{const sc=senseOf(s.sense);return `<button class="chip extra${(state.ans[s.id]||{}).r!==undefined?" done":""}" style="--c:${sc.c}" data-sel="${s.id}" aria-pressed="${state.sel===s.id}"><span class="dot" style="background:${sc.c}"></span>${esc(s.name)}<span class="x-tag">ajoutée par toi</span></button>`}).join("")}</div>
+      ${viewExtras(p)}
     </div>
-    <aside class="card panel" aria-live="polite">${sel?viewSource(sel):`<div class="empty"><h3>Choisis une source</h3><p>Chaque point correspond à une sensation fréquente dans ce lieu. Commence par celle qui te parle le plus.</p><p class="note">${doneCount(p)} source${doneCount(p)>1?"s":""} explorée${doneCount(p)>1?"s":""} sur ${p.sources.length}.</p></div>`}
+    <aside class="card panel" aria-live="polite">${state.sel==="new"?viewDraft(p):sel?viewSource(sel):`<div class="empty"><h3>Choisis une source</h3><p>Chaque point correspond à une sensation fréquente dans ce lieu. Commence par celle qui te parle le plus.</p><p class="note">${doneCount(p)} source${doneCount(p)>1?"s":""} explorée${doneCount(p)>1?"s":""} sur ${p.sources.length}.</p></div>`}
     </aside>
   </section>
   <div class="nav-bottom">${state.place>0?`<button class="btn ghost" data-go="p${state.place-1}">Lieu précédent</button>`:`<button class="btn ghost" data-go="intro">Accueil</button>`}${next}</div>`;
 }
 
+function viewExtras(p){
+  const xs = state.extra[p.id]||[];
+  return `<div class="extras">
+    <div class="extras-head"><h3>Une sensation qui n'est pas dans la scène ?</h3><span class="count">${xs.length}/${MAX_EXTRA}</span></div>
+    ${xs.length<MAX_EXTRA
+      ? `<p class="muted-s">Ajoute ce que tu vis dans ce lieu et que le jeu n'a pas prévu.</p><button class="btn ghost sm" data-xnew="1" style="align-self:flex-start">+ Ajouter une sensation</button>`
+      : `<p class="muted-s">Tu as ajouté ${MAX_EXTRA} sensations pour ce lieu, le maximum. Tu peux en modifier ou en supprimer une.</p>`}
+  </div>`;
+}
+
+function viewDraft(p){
+  const d = state.draft || {text:"", sense:null, r:null};
+  const opts = Object.entries(SENSES).concat([["autre",{label:"Je ne sais pas", c:"var(--slate)"}]]);
+  return `<form id="x-form" class="x-form" novalidate>
+    <h3>${d.id?"Modifier ta sensation":"Ajouter une sensation"}</h3>
+    <p class="muted-s">Une sensation que tu vis dans ${esc(p.name.replace(/^./,m=>m.toLowerCase()))} et qui n'est pas dans la scène.</p>
+    <label for="x-text" class="q">Ce que tu remarques</label>
+    <input id="x-text" maxlength="${MAX_LEN}" value="${esc(d.text)}" placeholder="Ex. : le bruit de l'ascenseur" autocomplete="off">
+    <span class="x-count" id="x-count">${d.text.length}/${MAX_LEN}</span>
+    <p class="q">Le sens concerné</p>
+    <div class="x-senses">${opts.map(([k,o])=>`<button type="button" class="chip" style="--c:${o.c}" data-xsense="${k}" aria-pressed="${d.sense===k}"><span class="dot" style="background:${o.c}"></span>${esc(o.label)}</button>`).join("")}</div>
+    <p class="q">Comment tu la vis ?</p>
+    <div class="reacts">${REACTS.map(r=>`<button type="button" class="react" style="--rc:${r.rc}" data-xreact="${r.v}" aria-pressed="${d.r===r.v}">${r.t}<small>${r.s}</small></button>`).join("")}</div>
+    <p class="x-err" id="x-err" hidden></p>
+    <div class="row"><button type="submit" class="btn">Enregistrer</button><button type="button" class="btn ghost" id="x-cancel">Annuler</button></div>
+  </form>`;
+}
+
 function viewSource(s){
-  const sense = SENSES[s.sense];
+  const sense = senseOf(s.sense);
   const a = state.ans[s.id] || {};
   let after = "";
   if(a.r>0){
@@ -606,19 +661,22 @@ function viewSource(s){
   } else if(a.r===0){
     after = `<p class="note">Noté. Cette source n'apparaîtra pas dans tes points de vigilance.</p>`;
   }
-  return `<span class="sense-tag" style="--c:${sense.c}"><span class="dot"></span>${sense.label}</span>
+  const tools = !s.extra ? "" : (state.confirmDel===s.id
+    ? `<div class="row x-tools"><span class="muted-s">Supprimer cette sensation ?</span><button class="btn ghost sm" data-xdelyes="${s.id}">Oui, supprimer</button><button class="btn ghost sm" data-xdelno="1">Non</button></div>`
+    : `<div class="row x-tools"><button class="btn ghost sm" data-xedit="${s.id}">Modifier</button><button class="btn ghost sm" data-xdel="${s.id}">Supprimer</button></div>`);
+  return `<span class="sense-tag" style="--c:${sense.c}"><span class="dot"></span>${sense.label}</span>${s.extra?'<span class="x-tag">ajoutée par toi</span>':""}
     <h3 style="font-size:1.25rem">${esc(s.name)}</h3>
     <p>${esc(s.d)}</p>
     <div><p class="q">Comment tu le vis ?</p>
       <div class="reacts" style="margin-top:8px">${REACTS.map(r=>`<button class="react" style="--rc:${r.rc}" data-react="${r.v}" aria-pressed="${a.r===r.v}">${r.t}<small>${r.s}</small></button>`).join("")}</div>
-    </div>${after}`;
+    </div>${after}${tools}`;
 }
 
 function viewFiche(){
   const date = new Date().toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
-  const all = PLACES.flatMap(p=>p.sources.map(s=>Object.assign({place:p.name},s)));
+  const all = allSources();
   const total = all.length, done = all.filter(s=>state.ans[s.id]&&state.ans[s.id].r!==undefined).length;
-  const blocks = Object.entries(SENSES).map(([k,sense])=>{
+  const blocks = senseEntries(all).map(([k,sense])=>{
     const src = all.filter(s=>s.sense===k);
     const gene = src.filter(s=>state.ans[s.id]&&state.ans[s.id].r>0);
     const res = src.filter(s=>state.ans[s.id]&&state.ans[s.id].r===-1);
@@ -628,8 +686,8 @@ function viewFiche(){
     return `<div class="sense-block">
       <h3><span class="dot" style="background:${sense.c}"></span>${sense.label}</h3>
       <div class="cols">
-        <div><h4>J'évite / me gêne</h4>${li(gene.map(s=>`<li>${esc(s.name)} <span style="color:var(--muted)">(${esc(s.place)}${state.ans[s.id].r===2?", fort":""})</span></li>`))}</div>
-        <div><h4>Je recherche</h4>${li(res.map(s=>`<li>${esc(s.name)} <span style="color:var(--muted)">(${esc(s.place)})</span></li>`))}</div>
+        <div><h4>J'évite / me gêne</h4>${li(gene.map(s=>`<li>${esc(s.name)} <span style="color:var(--muted)">(${esc(s.place)}${state.ans[s.id].r===2?", fort":""}${s.extra?", ajoutée par toi":""})</span></li>`))}</div>
+        <div><h4>Je recherche</h4>${li(res.map(s=>`<li>${esc(s.name)} <span style="color:var(--muted)">(${esc(s.place)}${s.extra?", ajoutée par toi":""})</span></li>`))}</div>
         <div><h4>À essayer</h4>${li(adj.map(t=>`<li>${esc(t)}</li>`))}</div>
       </div>
     </div>`;
@@ -656,11 +714,11 @@ function viewFiche(){
 }
 
 function synthesis(all){
-  const rows = Object.entries(SENSES).map(([k,sense])=>{
+  const rows = senseEntries(all).map(([k,sense])=>{
     const src = all.filter(s=>s.sense===k && state.ans[s.id] && state.ans[s.id].r!==undefined);
     const g = src.reduce((n,s)=>n+Math.max(0,state.ans[s.id].r),0);
     const r = src.filter(s=>state.ans[s.id].r===-1).length;
-    const max = all.filter(s=>s.sense===k).length*2;
+    const max = Math.max(1, all.filter(s=>s.sense===k).length*2);
     return {sense, g, r, max};
   });
   const sensBars = rows.map(o=>`<div class="sbar"><span class="lab"><span class="dot" style="background:${o.sense.c}"></span>${o.sense.label}</span>
@@ -697,9 +755,9 @@ function toolbox(all){
 }
 
 function ficheText(){
-  const all = PLACES.flatMap(p=>p.sources.map(s=>Object.assign({place:p.name},s)));
+  const all = allSources();
   let out = "MON PROFIL SENSORIEL\n" + new Date().toLocaleDateString("fr-FR") + "\n\n";
-  Object.entries(SENSES).forEach(([k,sense])=>{
+  senseEntries(all).forEach(([k,sense])=>{
     const src = all.filter(s=>s.sense===k);
     const gene = src.filter(s=>state.ans[s.id]&&state.ans[s.id].r>0);
     const res = src.filter(s=>state.ans[s.id]&&state.ans[s.id].r===-1);
@@ -732,8 +790,19 @@ document.addEventListener("click", e=>{
   if(c && state.sel){ const i=+c.dataset.adj; const a=state.ans[state.sel]; a.adj=a.adj||[]; a.adj = a.adj.includes(i)?a.adj.filter(x=>x!==i):a.adj.concat(i); save(); render(); return; }
   const cu = e.target.closest("[data-cust]");
   if(cu && state.sel){ const a=state.ans[state.sel]; a.custom=(a.custom||[]).filter((_,i)=>i!==+cu.dataset.cust); save(); render(); return; }
+  const xn = e.target.closest("[data-xnew]");
+  if(xn){ state.draft={text:"",sense:null,r:null}; state.sel="new"; state.confirmDel=null; render(); const i=document.getElementById("x-text"); i&&i.focus({preventScroll:true}); if(window.innerWidth<820){ const pn=document.querySelector(".panel"); pn&&pn.scrollIntoView({behavior:"smooth",block:"start"}); } return; }
+  const xs = e.target.closest("[data-xsense]"); if(xs && state.draft){ state.draft.sense=xs.dataset.xsense; render(); return; }
+  const xr = e.target.closest("[data-xreact]"); if(xr && state.draft){ state.draft.r=+xr.dataset.xreact; render(); return; }
+  if(e.target.closest("#x-cancel")){ const back=state.draft&&state.draft.id; state.draft=null; state.sel=back||null; render(); return; }
+  const xe = e.target.closest("[data-xedit]");
+  if(xe){ const p=PLACES[state.place]; const x=(state.extra[p.id]||[]).find(o=>o.id===xe.dataset.xedit); if(x){ state.draft={id:x.id,text:x.name,sense:x.sense,r:(state.ans[x.id]||{}).r}; state.sel="new"; state.confirmDel=null; render(); } return; }
+  const xd = e.target.closest("[data-xdel]"); if(xd){ state.confirmDel=xd.dataset.xdel; render(); return; }
+  if(e.target.closest("[data-xdelno]")){ state.confirmDel=null; render(); return; }
+  const xy = e.target.closest("[data-xdelyes]");
+  if(xy){ const p=PLACES[state.place]; const id=xy.dataset.xdelyes; state.extra[p.id]=(state.extra[p.id]||[]).filter(o=>o.id!==id); delete state.ans[id]; state.sel=null; state.confirmDel=null; save(); render(); return; }
   if(e.target.id==="reset"){ document.getElementById("reset-confirm").hidden=false; return; }
-  if(e.target.id==="reset-yes"){ state.ans={}; state.notes={recup:"",alerte:"",partage:""}; save(); render(); return; }
+  if(e.target.id==="reset-yes"){ state.ans={}; state.extra={}; state.notes={recup:"",alerte:"",partage:""}; save(); render(); return; }
   if(e.target.id==="copy"){
     const txt = ficheText(); const t=document.getElementById("toast");
     const ok = ()=>{ t.textContent="Fiche copiée, tu peux la coller où tu veux."; t.hidden=false; };
@@ -742,6 +811,19 @@ document.addEventListener("click", e=>{
   }
 });
 document.addEventListener("submit", e=>{
+  if(e.target.id==="x-form"){
+    e.preventDefault();
+    const d=state.draft||{}; const text=(document.getElementById("x-text").value||"").trim().slice(0,MAX_LEN);
+    const err=document.getElementById("x-err");
+    const msg = !text ? "Écris en quelques mots ce que tu remarques." : !d.sense ? "Choisis un sens, ou « Je ne sais pas »." : d.r===undefined||d.r===null ? "Indique comment tu la vis." : "";
+    if(msg){ err.textContent=msg; err.hidden=false; return; }
+    const p=PLACES[state.place]; const list=state.extra[p.id]||(state.extra[p.id]=[]);
+    let id=d.id;
+    if(id){ const x=list.find(o=>o.id===id); if(x){ x.name=text; x.sense=d.sense; } }
+    else { if(list.length>=MAX_EXTRA) return; id="x-"+p.id+"-"+Date.now().toString(36); list.push({id,name:text,sense:d.sense}); }
+    const a=state.ans[id]||{adj:[],custom:[]}; a.r=d.r; if(d.r<=0){ a.adj=[]; a.custom=[]; } state.ans[id]=a;
+    state.draft=null; state.sel=id; save(); render(); return;
+  }
   if(e.target.id!=="add-form") return;
   e.preventDefault();
   const inp=document.getElementById("add-input"); const v=inp.value.trim();
@@ -750,6 +832,7 @@ document.addEventListener("submit", e=>{
   const ni=document.getElementById("add-input"); ni&&ni.focus();
 });
 document.addEventListener("input", e=>{
+  if(e.target.id==="x-text" && state.draft){ state.draft.text=e.target.value.slice(0,MAX_LEN); const c=document.getElementById("x-count"); if(c) c.textContent=state.draft.text.length+"/"+MAX_LEN; const er=document.getElementById("x-err"); if(er) er.hidden=true; return; }
   const n = e.target.dataset && e.target.dataset.note;
   if(n){ state.notes[n]=e.target.value; save(); }
 });
