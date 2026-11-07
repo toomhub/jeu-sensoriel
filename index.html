@@ -239,6 +239,16 @@ footer{font-size:.8rem;color:var(--muted);max-width:70ch}
 }
 
 
+/* navigation : accueil et fiche séparés des lieux */
+nav.steps{flex-direction:column;align-items:stretch;gap:10px}
+nav.steps .nav-main{display:flex;flex-wrap:wrap;gap:8px}
+nav.steps .nav-places{display:flex;flex-wrap:wrap;gap:8px;padding-top:10px;border-top:1px dashed var(--line)}
+nav.steps .nav-home,nav.steps .nav-sheet{gap:8px;padding:8px 16px}
+nav.steps .nav-home svg,nav.steps .nav-sheet svg{width:18px;height:18px;flex:none}
+nav.steps .nav-home{background:var(--night);border-color:var(--night);color:var(--surface)}
+nav.steps .nav-home[aria-current="true"]{background:var(--night);border-color:var(--night);color:var(--surface);box-shadow:0 0 0 3px color-mix(in srgb,var(--night) 30%,transparent)}
+nav.steps .nav-sheet{border-color:var(--teal);color:var(--ink)}
+nav.steps .nav-sheet[aria-current="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
 /* v11 : illustrations pixel art */
 .scene-img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;user-select:none}
 .you-pin{position:absolute;transform:translate(-50%,-100%);background:#f08a6c;color:#fff;font-family:var(--f-display);font-weight:900;font-size:.72rem;line-height:1.4;padding:1px 8px;border-radius:999px;box-shadow:0 0 0 2px #fff,0 2px 6px rgba(0,0,0,.25);pointer-events:none;z-index:2}
@@ -346,7 +356,7 @@ body.zoomed{overflow:hidden}
   <main id="main"></main>
 
   <footer>
-    Support de psychoéducation conçu par Thomas Leblanc, psychologue (leblancpsychologue.com). Ce jeu t'aide à repérer ce qui te surcharge ou te ressource ; il ne pose aucun diagnostic et ne remplace pas un bilan ni un accompagnement. Tes réponses restent uniquement dans ce navigateur. Repères : DSM-5 (APA), critère des particularités sensorielles ; HAS, recommandations sur l'autisme chez l'adulte (2018). Version 16 · novembre 2026.
+    Support de psychoéducation conçu par Thomas Leblanc, psychologue (leblancpsychologue.com). Ce jeu t'aide à repérer ce qui te surcharge ou te ressource ; il ne pose aucun diagnostic et ne remplace pas un bilan ni un accompagnement. Tes réponses restent uniquement dans ce navigateur. Repères : DSM-5 (APA), critère des particularités sensorielles ; HAS, recommandations sur l'autisme chez l'adulte (2018). Version 17 · novembre 2026.
   </footer>
 </div>
 
@@ -630,9 +640,13 @@ function allSources(){ return myPlaces().flatMap(({p})=>sourcesOf(p).map(s=>Obje
 function senseEntries(all){ return Object.entries(SENSES).concat(all.some(s=>s.sense==="autre")?[["autre",UNKNOWN]]:[]); }
 
 function renderSteps(){
-  const items = [{k:"intro", t:"Accueil"}].concat(myPlaces().map(({p,i})=>({k:"p"+i, t:p.name.replace(/^(L'|Le |La |Les )/,"").replace(/^./,m=>m.toUpperCase()), c:doneCount(p)+"/"+p.sources.length}))).concat([{k:"fiche", t:"Ma fiche"}]);
   const cur = state.view==="place" ? "p"+state.place : state.view;
-  $steps.innerHTML = items.map(it => `<button data-go="${it.k}" aria-current="${it.k===cur}">${esc(it.t)}${it.c?` <span class="count">${it.c}</span>`:""}</button>`).join("");
+  const HOME = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const SHEET = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z M14 3v5h5 M10 13h6 M10 17h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const places = myPlaces().map(({p,i})=>{ const k="p"+i; const t=p.name.replace(/^(L'|Le |La |Les )/,"").replace(/^./,m=>m.toUpperCase());
+    return `<button data-go="${k}" aria-current="${k===cur}">${esc(t)} <span class="count">${doneCount(p)}/${p.sources.length}</span></button>`; }).join("");
+  $steps.innerHTML = `<div class="nav-main"><button class="nav-home" data-go="intro" aria-current="${cur==="intro"}">${HOME}Accueil</button><button class="nav-sheet" data-go="fiche" aria-current="${cur==="fiche"}">${SHEET}Ma fiche</button></div>
+    <div class="nav-places" role="group" aria-label="Lieux">${places}</div>`;
 }
 
 function go(k){
