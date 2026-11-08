@@ -327,17 +327,53 @@ body.zoomed{overflow:hidden}
   .pbar{grid-template-columns:minmax(0,1fr) auto}
   .pbar .lvl{display:none}
 }
+.print-sheet{display:none}
 @media print{
-  @page{size:A4;margin:14mm}
-  header nav,.nav-bottom,.no-print,footer,.zoom-btn{display:none!important}
-  body{background:#fff;color:#000;font-size:11pt}
-  .wrap{padding:0;max-width:none}
-  .sheet{border:none;padding:0;gap:14px}
-  .sense-block,.synth > *,.fields label{break-inside:avoid}
-  textarea{display:none}
-  .print-only{display:block}
-  .print-note{font-family:var(--f-body);font-weight:400;font-size:10.5pt;border:1px solid #ccd;border-radius:8px;padding:8px 10px;min-height:40px;white-space:pre-wrap}
+  @page{size:A4;margin:13mm 14mm}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:#fff!important;color:#16253d}
+  .wrap > header,.wrap > footer,#main > *:not(.print-sheet){display:none!important}
+  .wrap{padding:0;max-width:none;display:block}
+  .print-sheet{display:block;font-family:var(--f-body);font-size:9.5pt;line-height:1.4;color:#16253d}
+  .print-sheet h1{font-family:var(--f-display);font-size:20pt;font-weight:900;margin:0}
+  .print-sheet h2{font-family:var(--f-display);font-size:11.5pt;font-weight:900;margin:14px 0 6px;color:#1f8a86;text-transform:uppercase;letter-spacing:.06em}
+  .print-sheet h3{font-family:var(--f-display);font-size:10.5pt;font-weight:900;margin:0 0 4px}
+  .print-sheet h4{font-family:var(--f-display);font-size:9.5pt;font-weight:800;margin:0 0 4px}
+  .print-sheet h5{font-family:var(--f-display);font-size:8pt;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#6c7a8a;margin:6px 0 2px}
+  .ph{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #1f8a86;padding-bottom:8px}
+  .pk{font-family:var(--f-display);font-weight:800;font-size:8pt;text-transform:uppercase;letter-spacing:.08em;color:#1f8a86;margin:0}
+  .pm{text-align:right;font-size:8.5pt;color:#4a5a6e}
+  .p3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .pc{border:1px solid #cddcdc;border-radius:8px;padding:8px 10px;margin-bottom:10px}
+  .p2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .pc.cost .pl{columns:3;column-gap:16px;display:block}
+  .p2 .pl{columns:2;column-gap:14px;display:block}
+  .pc .pl li{margin-bottom:3px}
+  .pc.cost{border-top:4px solid #d4694a}.pc.good{border-top:4px solid #3f8c5a}.pc.low{border-top:4px solid #1c2f52}
+  .pl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+  .pl li{display:flex;gap:6px;align-items:flex-start;break-inside:avoid}
+  .pl b{font-weight:700}.pl em,.pa em,.pp em{font-style:normal;color:#6c7a8a;font-size:8.5pt}
+  .pd{display:inline-block;flex:none;width:7px;height:7px;border-radius:50%;margin:5px 5px 0 0}
+  .pl .pd{margin:5px 0 0}
+  .pe{color:#6c7a8a;font-style:italic;margin:0;font-size:8.5pt}
+  .pa{list-style:none;margin:0;padding:0;columns:2;column-gap:18px}
+  .pa li{display:flex;gap:7px;align-items:flex-start;break-inside:avoid;margin-bottom:4px}
+  .bx{flex:none;width:10px;height:10px;border:1.4px solid #4a5a6e;border-radius:2px;margin-top:3px}
+  .pn{border:1px solid #cddcdc;border-radius:8px;padding:8px 10px;min-height:70px;break-inside:avoid}
+  .pn p{margin:0;white-space:pre-wrap}
+  .pn .lines{height:48px;background:repeating-linear-gradient(transparent 0 15px,#cddcdc 15px 16px)}
+  .pbreak{break-after:page}
+  .pt{width:100%;border-collapse:collapse;font-size:9pt}
+  .pt th,.pt td{border-bottom:1px solid #e1e8e8;padding:5px 6px;text-align:left;vertical-align:top}
+  .pt thead th{font-family:var(--f-display);font-size:8pt;text-transform:uppercase;letter-spacing:.05em;color:#6c7a8a;border-bottom:2px solid #cddcdc}
+  .pt tbody th{font-family:var(--f-display);font-weight:800;white-space:nowrap;width:22%}
+  .pt tr{break-inside:avoid}
+  .print-sheet h2{break-after:avoid}
+  .pa li,.pp li{break-inside:avoid}
+  .pp{list-style:none;margin:0;padding:0;columns:2;column-gap:18px}
+  .pp li{display:flex;gap:8px;align-items:center;margin-bottom:5px;break-inside:avoid}
+  .pp .gauge i{width:16px;height:8px}
+  .pf{margin-top:16px;padding-top:6px;border-top:1px solid #cddcdc;font-size:7.5pt;color:#6c7a8a}
 }
 
 </style>
@@ -356,7 +392,7 @@ body.zoomed{overflow:hidden}
   <main id="main"></main>
 
   <footer>
-    Support de psychoéducation conçu par Thomas Leblanc, psychologue (leblancpsychologue.com). Ce jeu t'aide à repérer ce qui te surcharge ou te ressource ; il ne pose aucun diagnostic et ne remplace pas un bilan ni un accompagnement. Tes réponses restent uniquement dans ce navigateur. Repères : DSM-5 (APA), critère des particularités sensorielles ; HAS, recommandations sur l'autisme chez l'adulte (2018). Version 17 · novembre 2026.
+    Support de psychoéducation conçu par Thomas Leblanc, psychologue (leblancpsychologue.com). Ce jeu t'aide à repérer ce qui te surcharge ou te ressource ; il ne pose aucun diagnostic et ne remplace pas un bilan ni un accompagnement. Tes réponses restent uniquement dans ce navigateur. Repères : DSM-5 (APA), critère des particularités sensorielles ; HAS, recommandations sur l'autisme chez l'adulte (2018). Version 18 · novembre 2026.
   </footer>
 </div>
 
@@ -916,11 +952,49 @@ function viewFiche(){
     <div class="row"><span class="toast" id="toast" hidden></span>${canPrint?`<button class="btn ghost" id="print">Imprimer ou enregistrer en PDF</button>`:""}<button class="btn" id="copy">Copier ma fiche</button></div>
   </div>
   <textarea id="copy-fallback" class="no-print" hidden readonly></textarea>
+  ${printSheet(all, date)}
   <div class="card erase no-print">
     <h3>Effacer mes réponses</h3>
     <p class="muted-s">Tes réponses sont gardées dans ce navigateur pour que tu puisses reprendre plus tard. Sur un appareil partagé (cabinet, ordinateur familial), efface-les quand tu as terminé, après avoir copié ou imprimé ta fiche.</p>
     ${state.confirmDel==="all"?`<div class="row"><span class="muted-s"><b>Tout effacer, sans retour possible ?</b></span><button class="btn danger sm" id="erase-yes">Oui, tout effacer</button><button class="btn ghost sm" id="erase-no">Non</button></div>`:`<button class="btn ghost sm" id="erase" style="align-self:flex-start">Effacer toutes mes réponses</button>`}
   </div>`;
+}
+
+/* Fiche imprimable : une mise en page à part, pensée pour le papier */
+function printSheet(all, date){
+  const A = s => state.ans[s.id];
+  const done = all.filter(s=>answered(s.id));
+  const nPlaces = myPlaces().filter(({p})=>doneCount(p)>0).length;
+  const item = s => `<li><i class="pd" style="background:${senseOf(s.sense).c}"></i><span><b>${esc(s.name)}</b> <em>${esc(s.place)}${A(s).v?" · selon les jours":""}</em></span></li>`;
+  const list = (arr, empty) => arr.length ? `<ul class="pl">${arr.map(item).join("")}</ul>` : `<p class="pe">${empty}</p>`;
+  const strong = done.filter(s=>A(s).r===2), mild = done.filter(s=>A(s).r===1), res = done.filter(s=>A(s).r===-1), hypo = done.filter(s=>A(s).r===-2);
+  const adj = []; done.filter(s=>A(s).r>0||A(s).r===-2).forEach(s=>{ (A(s).adj||[]).forEach(i=>adj.push([s.adj[i], s])); (A(s).custom||[]).forEach(t=>adj.push([t, s])); });
+  const note = (t, v) => `<div class="pn"><h4>${t}</h4>${v ? `<p>${esc(v)}</p>` : `<div class="lines"></div>`}</div>`;
+  const rows = senseEntries(all).map(([k,sense])=>{
+    const src = done.filter(s=>s.sense===k); if(!src.length) return "";
+    const c = r => src.filter(s=>r(A(s).r)).map(s=>esc(s.name)).join(", ") || "—";
+    return `<tr><th><i class="pd" style="background:${sense.c}"></i>${sense.label}</th><td>${c(r=>r>0)}</td><td>${c(r=>r===-1)}</td><td>${c(r=>r===-2)}</td></tr>`;
+  }).join("");
+  const places = myPlaces().map(o=>o.p).filter(p=>doneCount(p)>0).map(p=>({p,L:load(p)})).sort((a,b)=>b.L.level-a.L.level||b.L.ratio-a.L.ratio);
+  return `<section class="print-sheet">
+    <div class="ph"><div><p class="pk">Mon environnement sensoriel</p><h1>Mon profil sensoriel</h1></div>
+      <div class="pm">Établi le ${date}<br>${done.length} sensations explorées · ${nPlaces} lieu${nPlaces>1?"x":""}</div></div>
+    <h2>L'essentiel</h2>
+    <div class="pc cost"><h3>Ce qui me coûte</h3><h5>Fortement</h5>${list(strong,"Rien de noté")}<h5>Un peu</h5>${list(mild,"Rien de noté")}</div>
+    <div class="p2">
+      <div class="pc good"><h3>Ce qui me fait du bien</h3>${list(res,"Rien de noté")}</div>
+      <div class="pc low"><h3>Ce que je perçois peu</h3>${list(hypo,"Rien de noté")}</div>
+    </div>
+    <h2>Mes pistes d'ajustement</h2>
+    ${adj.length ? `<ul class="pa">${adj.map(([t,s])=>`<li><span class="bx"></span><span>${esc(t)} <em>pour : ${esc(s.name.toLowerCase())}</em></span></li>`).join("")}</ul>` : `<p class="pe">Aucun ajustement choisi pour l'instant.</p>`}
+    <h2>Mes repères</h2>
+    <div class="p3">${note("Ce qui m'aide à récupérer", state.notes.recup)}${note("Mes signaux d'alerte", state.notes.alerte)}${note("Ce que je veux partager, et avec qui", state.notes.partage)}</div>
+    <h2>Le détail, sens par sens</h2>
+    <table class="pt"><thead><tr><th>Sens</th><th>Me coûte</th><th>Me fait du bien</th><th>Je perçois peu</th></tr></thead><tbody>${rows}</tbody></table>
+    <h2>Mes lieux, du plus au moins chargé</h2>
+    <ul class="pp">${places.map(({p,L})=>`<li>${gauge(L.level)}<b>${esc(p.name)}</b> <em>${LEVELS[L.level].replace(" pour toi","")}</em></li>`).join("")}</ul>
+    <p class="pf">Fiche issue du jeu « Mon environnement sensoriel » · Thomas Leblanc, psychologue. Outil de repérage, sans valeur diagnostique.</p>
+  </section>`;
 }
 
 function synthesis(all){
@@ -1016,7 +1090,7 @@ document.addEventListener("click", e=>{
   if(e.target.closest("#erase")){ state.confirmDel="all"; render(); return; }
   if(e.target.closest("#erase-no")){ state.confirmDel=null; render(); return; }
   if(e.target.closest("#erase-yes")){ state.ans={}; state.extra={}; state.notes={recup:"",alerte:"",partage:""}; state.mine=null; state.seen={}; state.sessionDone=[]; state.confirmDel=null; try{ localStorage.removeItem(STORE_KEY); }catch(err){} go("intro"); return; }
-  if(e.target.closest("#print")){ try{ window.print(); }catch(err){} return; }
+  if(e.target.closest("#print")){ render(); try{ window.print(); }catch(err){} return; }
   if(e.target.id==="copy"){
     const txt = ficheText(); const t=document.getElementById("toast");
     const ok = ()=>{ t.textContent="Fiche copiée, tu peux la coller où tu veux."; t.hidden=false; };
@@ -1024,6 +1098,7 @@ document.addEventListener("click", e=>{
     try{ navigator.clipboard.writeText(txt).then(ok, fb); }catch(err){ fb(); }
   }
 });
+window.addEventListener("beforeprint", ()=>{ if(state.view==="fiche") render(); });
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && state.zoom){ state.zoom=false; render(); } });
 document.addEventListener("submit", e=>{
   if(e.target.id==="x-form"){
